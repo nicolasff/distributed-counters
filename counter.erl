@@ -47,11 +47,8 @@ counter_lub(Counters) ->
 	lists:foldr(fun counter_merge/2, counter_new(0), Counters).
 
 counter_gc(Counter, ToRemove, ToAdd) ->
-	% io:format("Counter=~w~n", [Counter]),
-	% io:format("ToAdd=~w~n", [ToAdd]),
-
 	RefsToRemove = sets:from_list([Ref || {Ref,_} <- ToRemove#counter.data]),
-	% io:format("Refs to remove =~w~n", [sets:to_list(RefsToRemove)]),
+	io:format("remove ~w increments, replace with one.~n", [sets:size(RefsToRemove)]),
 	Cleaned = lists:foldr(fun(Ref, C) -> 
 		Deltas = lists:keydelete(Ref, 1, value(C)),
 		create(Deltas, merge_fun(C))

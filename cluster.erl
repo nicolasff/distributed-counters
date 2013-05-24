@@ -22,7 +22,7 @@ weak_cast(Cluster, Msg) ->
     lists:map(fun(Pid) ->
         Drop = random:uniform(?MSGDROP_TOTAL),
         if  Drop =< ?MSGDROP_CHANCE ->
-                io:format("Failed delivery of msg ~w to ~w~n", [Msg, Pid]),
+                io:format("Failed delivery of msg to ~w~n", [Pid]),
                 fail;
             true -> 
                 gen_server:cast(Pid, Msg)
