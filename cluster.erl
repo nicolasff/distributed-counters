@@ -3,6 +3,8 @@
 -record(cluster, {pids}).
 -define(MSGDROP_CHANCE,   1).
 -define(MSGDROP_TOTAL,  100).
+-define(MSGDUP_CHANCE,    1).
+-define(MSGDUP_TOTAL,   100).
 
 % Create a cluster of N nodes, each running a gen_server
 start(N) ->
@@ -26,9 +28,18 @@ weak_cast(Cluster, Msg) ->
                 io:format("Failed delivery of msg to ~w~n", [Pid]),
                 fail;
             true -> 
-                gen_server:cast(Pid, Msg)
+                send_at_least_once(Pid, Msg)
         end
     end, Cluster#cluster.pids).
+
+send_at_least_once(Pid, Msg) ->
+    gen_server:cast(Pid, Msg),
+    Dup = random:uniform(?MSGDUP_TOTAL),
+    if Dup =< ?MSGDUP_CHANCE ->
+            io:format("Duplicate delivery of msg to ~w~n", [Pid]),
+            send_at_least_once(Pid, Msg);
+        true -> done
+    end.
 
 % send a synchronous message to all nodes
 call(Cluster, Msg) ->
