@@ -20,7 +20,7 @@ run(NodeCount) ->
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     C = cluster:start(NodeCount),
-    Msgs = 5000,
+    Msgs = 10000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),

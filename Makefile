@@ -1,4 +1,4 @@
-OBJS=cluster.beam counter.beam node.beam test.beam
+OBJS=cluster.beam counter.beam node.beam test.beam gc.beam
 
 all: $(OBJS)
 

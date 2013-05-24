@@ -11,7 +11,7 @@ start(N) ->
                 Pid
         end, lists:seq(1,N)),
     Cluster = cluster:new(Pids),
-    node:start_gc_process(Cluster),
+    gc:start(Cluster),
     Cluster.
 
 new(Pids) ->
