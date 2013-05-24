@@ -1,12 +1,17 @@
 -module(cluster).
--export([start/1, weak_cast/2, call/2]).
+-export([new/1, start/1, weak_cast/2, call/2]).
 -record(cluster, {pids}).
 -define(MSGDROP_CHANCE,   1).
 -define(MSGDROP_TOTAL,  100).
 
 start(N) ->
     Pids = lists:map(fun(_) -> node:start() end, lists:seq(1,N)),
-    lists:map(fun(P) -> P ! {cluster_info, Pids} end, Pids),
+    Cluster = cluster:new(Pids),
+    lists:map(fun(Pid) -> Pid ! {cluster_info, Pids} end, Pids),
+    node:start_gc_process(Cluster),
+    Cluster.
+
+new(Pids) ->
     #cluster{pids=Pids}.
 
 
@@ -22,9 +27,9 @@ weak_cast(Cluster, Msg) ->
     end, Cluster#cluster.pids).
 
 call(Cluster, Msg) ->
-
+    Ref = make_ref(),
     lists:map(fun(Pid) ->
-        Pid ! {Msg, self()},
-        receive Value -> Value end
+        Pid ! {Msg, self(), Ref},
+        receive {Ref, Value} -> Value end
      end, Cluster#cluster.pids).
 
