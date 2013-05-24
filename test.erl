@@ -1,18 +1,15 @@
 -module(test).
 -export([main/0]).
 
+main() ->
+    run(3).
 
 incr_counter(C, I) ->
-    if
-        I rem 1000 == 0 ->
-          io:format("Sent ~w messages~n", [I]);
+    if  I rem 1000 == 0 -> io:format("Sent ~w messages~n", [I]);
         true -> ok
     end,
-    Counter = counter:counter_new(I),
-    % io:format("Send message ~w to Cluster ~w~n", [Counter, C]),
-    cluster:weak_cast(C, {incr, Counter}).
-
-main() -> run(3).
+    Counter = counter:counter_new(I), % create new counter with value "+I"
+    cluster:weak_cast(C, {incr, Counter}). % send to all with probability of message loss
 
 get_summaries(C) ->
     Counters = cluster:call(C, get_raw),
@@ -34,7 +31,7 @@ run(NodeCount) ->
 
     io:format("Gettting full counters on all nodes...~n"),
     Counters = cluster:call(C, get_raw),
-    Resolved = counter:counter_lub(Counters),
+    Resolved = counter:counter_merge_all(Counters),
     io:format("Value of resolved counters: ~w~n",
         [counter:counter_value(Resolved)]),
 

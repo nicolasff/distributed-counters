@@ -5,15 +5,17 @@
 -record(node, {data}).
 -define(GC_CHANCE,   1).
 -define(GC_TOTAL, 1000).
+-define(GC_PROCESS_NAME, gc_process).
 
 start_gc_process(Cluster) ->
     Pid = spawn(fun() -> gc_main(Cluster) end),
-    register(gc_process, Pid).
+    register(?GC_PROCESS_NAME, Pid).
 
+% run GC with a given probability
 maybe_run_gc() ->
     RunGC = random:uniform(?GC_TOTAL),
     if  RunGC =< ?GC_CHANCE ->
-            gc_process ! run;
+            ?GC_PROCESS_NAME ! run;
         true -> no_gc
     end.
 
@@ -22,7 +24,7 @@ gc_main(Cluster) ->
         run ->
             io:format("GC!~n"),
             Counters = cluster:call(Cluster, get_raw),   % take all known deltas
-            Merged = counter:counter_lub(Counters), % merge them into one, with all refs.
+            Merged = counter:counter_merge_all(Counters), % merge them into one, keeping all refs.
             Equivalent = counter:counter_new(counter:counter_value(Merged)),
             cluster:cast(Cluster, {replace, Merged, Equivalent}) % replace deltas
         end,
@@ -39,12 +41,16 @@ handle_call(get_raw, _From, State) ->
     {reply, State#node.data, State}.
 
 
+% handle replace command (used in GC).
+% ToRemove is a Counter, we'll remove all known refs
+% ToAdd is a Counter, we'll add it no matter what.
 handle_cast({replace, ToRemove, ToAdd}, State) ->
     Counter = State#node.data, % extract counter
     NewValue = counter:counter_gc(Counter, ToRemove, ToAdd), % replace some, add some.
     NewState = State#node{data=NewValue},
     {noreply, NewState};
 
+% handle increment command
 handle_cast({incr, Delta}, State) ->
     Counter = State#node.data, % extract counter
     Merge = counter:merge_fun(Counter), % select merge fun
