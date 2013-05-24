@@ -3,7 +3,7 @@
 -record(cluster, {pids}).
 -define(MSGDROP_CHANCE,   1).
 -define(MSGDROP_TOTAL,  100).
--define(MSGDUP_CHANCE,    1).
+-define(MSGDUP_CHANCE,  0).
 -define(MSGDUP_TOTAL,   100).
 
 % Create a cluster of N nodes, each running a gen_server
