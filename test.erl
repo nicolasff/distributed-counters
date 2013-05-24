@@ -14,12 +14,16 @@ incr_counter(C, I) ->
 
 main() -> run(3).
 
+get_summaries(C) ->
+    Counters = cluster:call(C, get_raw),
+    lists:map(fun counter:counter_value/1, Counters).
+
 run(NodeCount) ->
     random:seed(now()),
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     C = cluster:start(NodeCount),
-    Msgs = 2000,
+    Msgs = 1000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
@@ -34,16 +38,14 @@ run(NodeCount) ->
     io:format("Value of resolved counters: ~w~n",
         [counter:counter_value(Resolved)]),
 
-    io:format("Print sum according to each node:~n"),
-    cluster:weak_cast(C, print_raw),
+    io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
     io:format("Trigger GC~n"),
     gc_process ! run,
 
     receive after 1000 -> ok end,
     
-    io:format("Print sum according to each node:~n"),
-    cluster:weak_cast(C, print_raw),
+    io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
     bye.
 
