@@ -1,6 +1,6 @@
 -module(gc).
 -export([start/1, maybe_run/0]).
--define(GC_CHANCE,   1).
+-define(GC_CHANCE,  10).
 -define(GC_TOTAL, 1000).
 -define(GC_PROCESS_NAME, gc_process).
 
@@ -27,7 +27,7 @@ gc_loop(Cluster) ->
     gc_loop(Cluster).
 
 gc_run(Cluster, Ref) ->
-    Counters = cluster:call(Cluster, get_raw),   % take all known deltas
+    Counters = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
     Merged = counter:counter_merge_all(Counters), % merge them into one, keeping all refs.
     Equivalent = counter:counter_new(counter:counter_value(Merged)),
     cluster:cast(Cluster, {replace, Merged, Equivalent}), % replace deltas

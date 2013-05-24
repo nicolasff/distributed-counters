@@ -20,11 +20,15 @@ run(NodeCount) ->
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     C = cluster:start(NodeCount),
-    Msgs = 1000,
+    Msgs = 10000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
-    lists:map(fun(I) -> incr_counter(C, I) end, Deltas),
+    lists:map(fun(I) ->
+                incr_counter(C, I)
+                % ,
+                % timer:sleep(1000)
+        end, Deltas),
 
     % collect answers
     io:format("Expected value is ~w~n", [lists:sum(Deltas)]),
@@ -36,6 +40,8 @@ run(NodeCount) ->
         [counter:counter_value(Resolved)]),
 
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
+
+    receive after 1100 -> ok end,
 
     io:format("Trigger GC~n"),
     gc_process ! run,

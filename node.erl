@@ -9,9 +9,14 @@ init(_Args) ->
     {ok, State}.
 
 
-handle_call(get_raw, _From, State) ->
-    {reply, State#node.data, State}.
+handle_call(get_raw_for_gc, _From, State) ->
+    Counter = State#node.data, % extract counter
+    Reply = counter:counter_remove_recent(Counter),
+    {reply, Reply, State};
 
+handle_call(get_raw, _From, State) ->
+    Counter = State#node.data, % extract counter
+    {reply, Counter, State}.
 
 % handle replace command (used in GC).
 % ToRemove is a Counter, we'll remove all known refs

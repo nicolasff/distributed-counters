@@ -1,8 +1,9 @@
 -module(counter).
 -record(counter, {data, merge}).
 -export([create/2,merge_fun/1]).
-
--export([counter_value/1,counter_new/1,counter_merge/2,counter_merge_all/1,counter_gc/3]).
+-define(GC_THRESHOLD, 1000000). % 1 second
+-export([counter_value/1,counter_new/1,counter_merge/2,
+		counter_merge_all/1,counter_gc/3,counter_remove_recent/1]).
 
 
 create(Value, Fun) ->
@@ -25,7 +26,8 @@ counter_merge(L,R) ->
 	LV = value(L),
 	RV = value(R),
 	Fun = merge_fun(L),
-	create(LV ++ RV, Fun).
+	Merged = lists:ukeysort(1, lists:keymerge(1, LV, RV)), % merge and dedupe
+	create(Merged, Fun).
 
 % Creates a new counter with a single value
 % This function generates a unique reference for the delta
@@ -38,7 +40,7 @@ counter_new(Value) ->
 counter_value(C) ->
 	Increments = value(C),
 	Deduped = lists:ukeysort(1, Increments),
-	lists:sum([Delta || {_Id,{Timestamp,Delta}} <- Deduped]).
+	lists:sum([Delta || {_Id,{_Timestamp,Delta}} <- Deduped]).
 
 % Generate the merged version of several counters
 counter_merge_all(Counters) ->
@@ -49,10 +51,29 @@ counter_merge_all(Counters) ->
 % Returns "(Counter \ ToRemove) U ToAdd"
 counter_gc(Counter, ToRemove, ToAdd) ->
 	RefsToRemove = sets:from_list([Ref || {Ref,_} <- ToRemove#counter.data]),
-	io:format("remove ~w increments, replace with one.~n", [sets:size(RefsToRemove)]),
+	% io:format("remove ~w increments, replace with one.~n", [sets:size(RefsToRemove)]),
+	% io:format("ToRemove: ~w~n", [ToRemove]),
+	% io:format("Adding: ~w~n", [ToAdd]),
 	Cleaned = lists:foldr(fun(Ref, C) -> 
 		NewDeltas = lists:keydelete(Ref, 1, value(C)), % Remove "Ref" from C
 		create(NewDeltas, merge_fun(C)) % return a new counter with the ref removed.
 		end, Counter, sets:to_list(RefsToRemove)), % do this for all refs in "ToRemove".
 
-	counter_merge(ToAdd, Cleaned). % Add the new counter to the cleaned-up one.
+	Ret = counter_merge(ToAdd, Cleaned), % Add the new counter to the cleaned-up one.
+	% io:format("Result: ~w~n", [Ret]),
+	Ret.
+
+% Returns a counter without the recent increments
+counter_remove_recent(Counter) ->
+	Increments = value(Counter),
+	Now = erlang:now(),
+	% io:format("Increments = ~w~n", [Increments]),
+	% io:format("Now = ~w~n", [Now]),
+	OldIncrements = lists:filter(
+		fun({_Id,{Timestamp,_Delta}}) ->
+				timer:now_diff(Now, Timestamp) > ?GC_THRESHOLD
+		end, Increments),
+
+	io:format("Extract ~w old increments out of ~w total~n",
+		[length(OldIncrements), length(Increments)]),
+	Counter#counter{data=OldIncrements}.
