@@ -44,7 +44,7 @@ send_at_least_once(Pid, Msg) ->
 % send a synchronous message to all nodes
 call(Cluster, Msg) ->
     lists:map(fun(Pid) ->
-        gen_server:call(Pid, Msg)
+        gen_server:call(Pid, Msg, infinity)
      end, Cluster#cluster.pids).
 
 % send an asynchronous message to all nodes

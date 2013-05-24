@@ -51,29 +51,21 @@ counter_merge_all(Counters) ->
 % Returns "(Counter \ ToRemove) U ToAdd"
 counter_gc(Counter, ToRemove, ToAdd) ->
 	RefsToRemove = sets:from_list([Ref || {Ref,_} <- ToRemove#counter.data]),
-	% io:format("remove ~w increments, replace with one.~n", [sets:size(RefsToRemove)]),
-	% io:format("ToRemove: ~w~n", [ToRemove]),
-	% io:format("Adding: ~w~n", [ToAdd]),
 	Cleaned = lists:foldr(fun(Ref, C) -> 
 		NewDeltas = lists:keydelete(Ref, 1, value(C)), % Remove "Ref" from C
 		create(NewDeltas, merge_fun(C)) % return a new counter with the ref removed.
 		end, Counter, sets:to_list(RefsToRemove)), % do this for all refs in "ToRemove".
 
 	Ret = counter_merge(ToAdd, Cleaned), % Add the new counter to the cleaned-up one.
-	% io:format("Result: ~w~n", [Ret]),
 	Ret.
 
 % Returns a counter without the recent increments
 counter_remove_recent(Counter) ->
 	Increments = value(Counter),
 	Now = erlang:now(),
-	% io:format("Increments = ~w~n", [Increments]),
-	% io:format("Now = ~w~n", [Now]),
-	OldIncrements = lists:filter(
+	OldIncrements = lists:filter( % filter out increments that are too old
 		fun({_Id,{Timestamp,_Delta}}) ->
 				timer:now_diff(Now, Timestamp) > ?GC_THRESHOLD
 		end, Increments),
 
-	io:format("Extract ~w old increments out of ~w total~n",
-		[length(OldIncrements), length(Increments)]),
 	Counter#counter{data=OldIncrements}.

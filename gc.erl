@@ -1,7 +1,7 @@
 -module(gc).
 -export([start/1, maybe_run/0]).
--define(GC_CHANCE,  10).
--define(GC_TOTAL, 1000).
+-define(GC_CHANCE,    1).
+-define(GC_TOTAL,  1000).
 -define(GC_PROCESS_NAME, gc_process).
 
 start(Cluster) ->
@@ -35,6 +35,6 @@ gc_run(Cluster, Ref) ->
 
 gc_wait(Ref) ->
     receive
-        Ref -> done;
+        Ref -> io:format("GC ended~n"), done;
         _   -> gc_wait(Ref) % skip messages sent to the GC process whilst it's waiting for completion
     end.

@@ -26,8 +26,6 @@ run(NodeCount) ->
     Deltas = lists:seq(1,Msgs),
     lists:map(fun(I) ->
                 incr_counter(C, I)
-                % ,
-                % timer:sleep(1000)
         end, Deltas),
 
     % collect answers
@@ -50,5 +48,5 @@ run(NodeCount) ->
     
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
-    bye.
+    ok.
 
