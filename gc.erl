@@ -1,5 +1,5 @@
 -module(gc).
--export([start/1, maybe_run/0]).
+-export([start/1, maybe_run/0, run/0]).
 -define(GC_CHANCE,    1).
 -define(GC_TOTAL,  1000).
 -define(GC_PROCESS_NAME, gc_process).
@@ -11,10 +11,11 @@ start(Cluster) ->
 % run GC with a given probability
 maybe_run() ->
     RunGC = random:uniform(?GC_TOTAL),
-    if  RunGC =< ?GC_CHANCE ->
-            ?GC_PROCESS_NAME ! run;
+    if  RunGC =< ?GC_CHANCE -> run();
         true -> no_gc
     end.
+
+run() -> ?GC_PROCESS_NAME ! run.
 
 gc_loop(Cluster) ->
     receive

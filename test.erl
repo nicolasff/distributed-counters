@@ -39,10 +39,10 @@ run(NodeCount) ->
 
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
+    timer:sleep(1100), % wait a bit so that GC can pick up all increments
     io:format("Trigger GC~n"),
-    gc_process ! run,
-
-    receive after 1000 -> ok end,
+    gc:run(),
+    timer:sleep(1000), % wait for GC to return
     
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
