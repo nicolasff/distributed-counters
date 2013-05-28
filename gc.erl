@@ -19,10 +19,10 @@ maybe_run() ->
 gc_loop(Cluster) ->
     receive
         run ->
-            io:format("GC! Spawning new process~n"),
             Ref = make_ref(), % run actual GC in a separate process
             spawn(fun() -> gc_run(Cluster, Ref) end),
-            gc_wait(Ref) % wait for completion
+            gc_wait(Ref), % wait for completion
+            ok
         end,
     gc_loop(Cluster).
 
@@ -30,11 +30,11 @@ gc_run(Cluster, Ref) ->
     Counters = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
     Merged = counter:counter_merge_all(Counters), % merge them into one, keeping all refs.
     Equivalent = counter:counter_new(counter:counter_value(Merged)),
-    cluster:cast(Cluster, {replace, Merged, Equivalent}), % replace deltas
+    cluster:call(Cluster, {replace, Merged, Equivalent}), % replace deltas
     ?GC_PROCESS_NAME ! Ref. % signal back
 
 gc_wait(Ref) ->
     receive
-        Ref -> io:format("GC ended~n"), done;
+        Ref -> done;
         _   -> gc_wait(Ref) % skip messages sent to the GC process whilst it's waiting for completion
     end.

@@ -3,7 +3,7 @@
 -export([create/2,merge_fun/1]).
 -define(GC_THRESHOLD, 1000000). % 1 second
 -export([counter_value/1,counter_new/1,counter_merge/2,
-		counter_merge_all/1,counter_gc/3,counter_remove_recent/1]).
+		counter_merge_all/1,counter_gc/3,counter_remove_recent/2]).
 
 
 create(Value, Fun) ->
@@ -60,12 +60,11 @@ counter_gc(Counter, ToRemove, ToAdd) ->
 	Ret.
 
 % Returns a counter without the recent increments
-counter_remove_recent(Counter) ->
-	Increments = value(Counter),
+counter_remove_recent(Counter, MaxItems) ->
+	Increments = lists:sublist(value(Counter), MaxItems), % take the first N items
 	Now = erlang:now(),
 	OldIncrements = lists:filter( % filter out increments that are too old
 		fun({_Id,{Timestamp,_Delta}}) ->
 				timer:now_diff(Now, Timestamp) > ?GC_THRESHOLD
 		end, Increments),
-
 	Counter#counter{data=OldIncrements}.
