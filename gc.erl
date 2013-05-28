@@ -22,14 +22,13 @@ gc_loop(Cluster) ->
         run ->
             Ref = make_ref(), % run actual GC in a separate process
             spawn(fun() -> gc_run(Cluster, Ref) end),
-            gc_wait(Ref), % wait for completion
-            ok
+            gc_wait(Ref) % wait for completion
         end,
     gc_loop(Cluster).
 
 gc_run(Cluster, Ref) ->
     Counters = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
-    Merged = counter:counter_merge_all(Counters), % merge them into one, keeping all refs.
+    Merged = counter:counter_merge_all(Counters), % merge into one, keep refs.
     Equivalent = counter:counter_new(counter:counter_value(Merged)),
     cluster:call(Cluster, {replace, Merged, Equivalent}), % replace deltas
     ?GC_PROCESS_NAME ! Ref. % signal back
@@ -37,5 +36,5 @@ gc_run(Cluster, Ref) ->
 gc_wait(Ref) ->
     receive
         Ref -> done;
-        _   -> gc_wait(Ref) % skip messages sent to the GC process whilst it's waiting for completion
+        _   -> gc_wait(Ref) % skip other messages sent to the GC process
     end.

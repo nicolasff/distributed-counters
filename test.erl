@@ -9,7 +9,7 @@ incr_counter(C, I) ->
         true -> ok
     end,
     Counter = counter:counter_new(I), % create new counter with value "+I"
-    cluster:weak_call(C, {incr, Counter}). % send to all with probability of message loss
+    cluster:weak_call(C, {incr, Counter}). % send to all with probabt. of loss
 
 get_summaries(C) ->
     Counters = cluster:call(C, get_raw),
@@ -20,13 +20,11 @@ run(NodeCount) ->
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     C = cluster:start(NodeCount),
-    Msgs = 100000,
+    Msgs = 10000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
-    lists:map(fun(I) ->
-                incr_counter(C, I)
-        end, Deltas),
+    lists:map(fun(I) -> incr_counter(C, I) end, Deltas),
 
     % collect answers
     io:format("Expected value is ~w~n", [lists:sum(Deltas)]),
@@ -47,4 +45,3 @@ run(NodeCount) ->
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
 
     init:stop(0).
-

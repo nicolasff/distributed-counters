@@ -1,6 +1,7 @@
 -module(node).
 -behaviour(gen_server).
--export([code_change/3, handle_call/3, handle_cast/2, handle_info/2, init/1, terminate/2]).
+-export([code_change/3, handle_call/3, handle_cast/2,
+         handle_info/2, init/1, terminate/2]).
 -record(node, {data}).
 -define(GC_COUNT_LIMIT, 10000).
 
@@ -8,7 +9,6 @@ init(_Args) ->
     Counter = counter:counter_new(0),
     State = #node{data=Counter},
     {ok, State}.
-
 
 handle_call(get_raw_for_gc, _From, State) ->
     Counter = State#node.data, % extract counter
@@ -33,7 +33,7 @@ handle_call(get_raw, _From, State) ->
 % ToAdd is a Counter, we'll add it no matter what.
 handle_call({replace, ToRemove, ToAdd}, _From, State) ->
     Counter = State#node.data, % extract counter
-    NewValue = counter:counter_gc(Counter, ToRemove, ToAdd), % replace some, add some.
+    NewValue = counter:counter_gc(Counter, ToRemove, ToAdd), % replace
     NewState = State#node{data=NewValue},
     {reply, ok, NewState}.
 
