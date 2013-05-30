@@ -11,7 +11,7 @@ behaviour_info(callbacks) ->
     [{new,1},         % create a new counter from an initial value
     {merge,2},        % merge two counters together and return a new one
     {value,1},        % extract the value from a counter
-    {is_idempotent/0} % true/false - are updates to this counter idempotent?
+    {is_idempotent,0} % true/false - are updates to this counter idempotent?
 ];
 behaviour_info(_Other) ->
     undefined.
