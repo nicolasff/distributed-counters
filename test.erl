@@ -2,7 +2,8 @@
 -export([main/0, test_simple_merge/0]).
 
 main() ->
-    run(3).
+    NodeCount = 3,
+    run(ctr_sum, NodeCount).
 
 incr_counter(Cluster, CounterModule, I) ->
     if  I rem 1000 == 0 -> io:format("Sent ~w messages~n", [I]);
@@ -20,17 +21,20 @@ merge_all(CounterModule, [H|T]) ->
     Empty = counter:bottom(CounterModule),
     lists:foldr(fun counter:merge/2, Empty, [H|T]).
 
-run(NodeCount) ->
+run(CounterModule, NodeCount) ->
     random:seed(now()),
 
-    CounterModule = ctr_sum,
-
-    io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
+    % start cluster
+    io:format("Testing ~w on ~w nodes~n", [CounterModule, NodeCount]),
     Cluster = cluster:start(NodeCount, CounterModule),
+
+    % send "Cluster" record to all nodes.
+    cluster:call(Cluster, {set_cluster, Cluster}),
+
     Msgs = 10000,
 
     % send deltas
-    Deltas = lists:seq(1,Msgs),
+    Deltas = lists:seq(1,Msgs), % TODO: randomise
     lists:map(fun(I) -> incr_counter(Cluster, CounterModule, I) end, Deltas),
 
     % collect answers
@@ -49,7 +53,7 @@ run(NodeCount) ->
         false -> 
             timer:sleep(1100), % wait a bit so that GC can pick up all increments
             io:format("Trigger GC~n"),
-            gc:run(),
+            cluster:gc_run(Cluster),
             timer:sleep(1000), % wait for GC to return
             io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)])
     end,

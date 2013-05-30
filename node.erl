@@ -2,12 +2,17 @@
 -behaviour(gen_server).
 -export([code_change/3, handle_call/3, handle_cast/2,
          handle_info/2, init/1, terminate/2]).
--record(node, {data}).
+-record(node, {data, cluster}).
 
 init([CounterModule]) ->
     Counter = counter:bottom(CounterModule),
     State = #node{data=Counter},
     {ok, State}.
+
+% handle metadata update
+handle_call({set_cluster, Cluster}, _From, State) ->
+    NewState = State#node{cluster=Cluster},
+    {reply, ok, NewState};
 
 handle_call(get_raw_for_gc, _From, State) ->
     Counter = State#node.data, % extract counter
@@ -18,7 +23,7 @@ handle_call(get_raw_for_gc, _From, State) ->
 handle_call({incr, Delta}, _From, State) ->
     Counter = State#node.data, % extract counter
     NewValue = counter:merge(Counter, Delta), % merge with delta
-    gc:maybe_run(), % trigger GC with a given probability
+    cluster:gc_maybe_run(State#node.cluster), % trigger GC with a given probability
     NewState = State#node{data=NewValue},
     {reply, ok, NewState};
 
