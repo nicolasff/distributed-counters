@@ -16,6 +16,8 @@ Several functions can be implemented that way, including:
 * (Hyper)LogLog
 * …
 
+Counter definition
+------------------
 
 An Erlang “behaviour” is used to implement a few functions per counter, namely:
 
@@ -29,17 +31,27 @@ An Erlang “behaviour” is used to implement a few functions per counter, name
 
 Idempotent counter types do not need to implement `gc_info/1` and `gc_merge/3`.
 
+Distribution
+------------
+
+The demo program starts 3 nodes as separate Erlang processes and sends them a few thousand counter updates with a high probability of dropped and duplicate messages. Once all the updates have been sent, each node is asked to give its own opinion about the total count and a merged value of these 3 values is displayed. If needed, a GC process is run to update the nodes.
+
+
+Running the demo
+----------------
+
+Run `make clean all demo` to run the demo.
+Here is what you should see:
+
+(TODO)
+
 Limitations
 -----------
 
 This code is quite inefficient and only intended as an experiment.
 
-Running the demo
-----------------
-
-(TODO)
-
 License
 -------
 
-Released in the Public Domain. Originally developed as an internal prototype at [Acunu](http://acunu.com/).
+Released in the Public Domain.
+Originally developed as an internal prototype at [Acunu](http://acunu.com/).
