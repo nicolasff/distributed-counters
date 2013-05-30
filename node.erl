@@ -23,7 +23,14 @@ handle_call(get_raw_for_gc, _From, State) ->
 handle_call({incr, Delta}, _From, State) ->
     Counter = State#node.data, % extract counter
     NewValue = counter:merge(Counter, Delta), % merge with delta
-    cluster:gc_maybe_run(State#node.cluster), % trigger GC with a given probability
+
+	% trigger GC with a given probability
+	IsIdempotent = counter:is_idempotent(Counter),
+	if  IsIdempotent ->
+			do_nothing;
+		true -> cluster:gc_maybe_run(State#node.cluster)
+	end,
+
     NewState = State#node{data=NewValue},
     {reply, ok, NewState};
 

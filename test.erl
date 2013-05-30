@@ -5,16 +5,18 @@
 
 main() ->
     NodeCount = 3,
-    run(ctr_sum, NodeCount),
-    run(ctr_min, NodeCount),
+    MsgCount = 10000,
+    run(ctr_sum, MsgCount, NodeCount),
+    run(ctr_min, MsgCount, NodeCount),
+    run(ctr_max, MsgCount, NodeCount),
 
     init:stop(0).
 
-incr_counter(Cluster, CounterModule, I) ->
+incr_counter(Cluster, CounterModule, I, Delta) ->
     if  I rem 1000 == 0 -> io:format("Sent ~w messages~n", [I]);
         true -> ok
     end,
-    Counter = counter:new(CounterModule, I), % create new counter
+    Counter = counter:new(CounterModule, Delta), % create new counter
     cluster:weak_call(Cluster, {incr, Counter}). % send to all with probabt. of loss
 
 get_summaries(Cluster) ->
@@ -37,7 +39,7 @@ merge_all(CounterModule, [H|T]) ->
     Empty = counter:bottom(CounterModule),
     lists:foldr(fun counter:merge/2, Empty, [H|T]).
 
-run(CounterModule, NodeCount) ->
+run(CounterModule, MsgCount, NodeCount) ->
     random:seed(now()),
 
     % start cluster
@@ -48,11 +50,11 @@ run(CounterModule, NodeCount) ->
     % send "Cluster" record to all nodes.
     cluster:call(Cluster, {set_cluster, Cluster}),
 
-    MsgCount = 1000,
-
     % send deltas
     Deltas = random_integers(MsgCount),
-    lists:map(fun(I) -> incr_counter(Cluster, CounterModule, I) end, Deltas),
+    lists:map(fun({I, Delta}) ->
+                incr_counter(Cluster, CounterModule, I, Delta)
+        end, lists:zip(lists:seq(1, MsgCount), Deltas)),
 
     % collect answers
     io:format("Expected value is ~w~n", [local_reduce(CounterModule, Deltas)]),

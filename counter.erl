@@ -1,6 +1,7 @@
 -module(counter).
 -record(ctr, {module, data}).
--export([bottom/1, new/2, merge/2, gc_info/1, gc_merge/3, value/1]).
+-export([bottom/1, new/2, merge/2, gc_info/1, gc_merge/3,
+        is_idempotent/1, value/1]).
 
 -export([behaviour_info/1]).
 
@@ -46,3 +47,7 @@ value(C) ->
     Mod = C#ctr.module,
     Value = C#ctr.data,
     Mod:value(Value).
+
+is_idempotent(C) ->
+    Mod = C#ctr.module,
+    Mod:is_idempotent().
