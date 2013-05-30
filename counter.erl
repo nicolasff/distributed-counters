@@ -1,6 +1,8 @@
 -module(counter).
--record(counter, {data, merge}).
--export([create/2,merge_fun/1]).
+-record(counter, {data, merge, module}).
+-record(ctr, {module, value}).
+-export([new/2, merge/2, gc_info/1, gc_merge/2]).
+-export([create/2, merge_fun/1]).
 -define(GC_THRESHOLD, 1000000). % 1 second
 -export([counter_value/1,counter_new/1,counter_merge/2,
         counter_merge_all/1,counter_gc/3,counter_remove_recent/2]).
@@ -20,6 +22,29 @@ behaviour_info(_Other) ->
 
 create(Value, Fun) ->
     #counter {data=Value, merge=Fun}.
+
+
+new(Mod, Init) ->
+	Value = Mod:new(Init),
+	#ctr{module=Mod, value=Value}.
+
+merge(L,R) ->
+	LV = L#ctr.value,
+	RV = R#ctr.value,
+	Mod = L#ctr.module, % extract module from L
+	Mod = R#ctr.module, % match module in R too
+	Out = Mod:merge(LV, RV),
+	#ctr{module=Mod, value=Out}.
+
+gc_info(C) ->
+	Mod = C#ctr.module,
+	Value = C#ctr.value,
+	Mod:gc_info(Value).
+
+gc_merge(GcInfo, C) ->
+	Mod = C#ctr.module,
+	Value = C#ctr.value,
+	Mod:gc_merge(GcInfo, Value).
 
 % internal access
 merge_fun(C) -> C#counter.merge.

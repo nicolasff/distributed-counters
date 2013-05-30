@@ -1,5 +1,5 @@
 -module(test).
--export([main/0]).
+-export([main/0, x/0]).
 
 main() ->
     run(3).
@@ -43,5 +43,30 @@ run(NodeCount) ->
     timer:sleep(1000), % wait for GC to return
     
     io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
+
+    init:stop(0).
+
+x() ->
+	A = counter:new(ctr_sum, 12),
+	B = counter:new(ctr_sum, 34),
+	C = counter:merge(A,B),
+
+	io:format("A=~w~n", [A]),
+	io:format("B=~w~n", [B]),
+	io:format("C=~w~n", [C]),
+
+	% wait a bit
+	timer:sleep(1100),
+
+	GcInfo = lists:map(fun counter:gc_info/1, [A,B]),
+	io:format("GcInfo=~w~n", [GcInfo]),
+
+	A1 = counter:gc_merge(GcInfo, A),
+	B1 = counter:gc_merge(GcInfo, B),
+	C1 = counter:gc_merge(GcInfo, C),
+
+	io:format("A1=~w~n", [A1]),
+	io:format("B1=~w~n", [B1]),
+	io:format("C1=~w~n", [C1]),
 
     init:stop(0).

@@ -33,7 +33,7 @@ gc_info(C) -> % extract all "non-recent" increments
 
 gc_merge(GcData, C) -> 
 	AllIncrements = lists:concat(GcData),
-	ToAdd = value(AllIncrements),
+	ToAdd = new(value(AllIncrements)),
     RefsToRemove = sets:from_list([Ref || {Ref,_} <- AllIncrements]),
     Cleaned = lists:foldr(fun(Ref, Cur) -> 
 			lists:keydelete(Ref, 1, Cur) % Remove "Ref" from C
