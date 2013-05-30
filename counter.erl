@@ -1,11 +1,11 @@
 -module(counter).
 -record(counter, {data, merge, module}).
 -record(ctr, {module, value}).
--export([new/2, merge/2, gc_info/1, gc_merge/2]).
+-export([new/2, merge/2, gc_info/1, gc_merge/2, value/1]).
 -export([create/2, merge_fun/1]).
 -define(GC_THRESHOLD, 1000000). % 1 second
--export([counter_value/1,counter_new/1,counter_merge/2,
-        counter_merge_all/1,counter_gc/3,counter_remove_recent/2]).
+-export([counter_value/1,
+        merge_all/1,counter_gc/3,counter_remove_recent/2]).
 
 -export([behaviour_info/1]).
 
@@ -46,9 +46,13 @@ gc_merge(GcInfo, C) ->
 	Value = C#ctr.value,
 	Mod:gc_merge(GcInfo, Value).
 
+value(C) ->
+	Mod = C#ctr.module,
+	Value = C#ctr.value,
+	Mod:value(Value).
+
 % internal access
 merge_fun(C) -> C#counter.merge.
-value(C)     -> C#counter.data.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %          Simple counters with replay capability          %
@@ -57,20 +61,6 @@ value(C)     -> C#counter.data.
 % A counter has a list of increments.
 % Each increment is a tuple {ref, delta}
 
-counter_merge(L,R) -> 
-    LV = value(L),
-    RV = value(R),
-    Fun = merge_fun(L),
-    Merged = lists:ukeysort(1, lists:keymerge(1, LV, RV)), % merge and dedupe
-    create(Merged, Fun).
-
-% Creates a new counter with a single value
-% This function generates a unique reference for the delta
-counter_new(Value) -> 
-    UniqueId = make_ref(),
-    Timestamp = now(),
-    create([{UniqueId, {Timestamp,Value}}], fun counter_merge/2).
-
 % Extracts the total counter value. In this case, we sum up the increments.
 counter_value(C) ->
     Increments = value(C),
@@ -78,8 +68,13 @@ counter_value(C) ->
     lists:sum([Delta || {_Id,{_Timestamp,Delta}} <- Deduped]).
 
 % Generate the merged version of several counters
-counter_merge_all(Counters) ->
-    lists:foldr(fun counter_merge/2, counter_new(0), Counters).
+merge_all([H|T]) ->
+	Mod = H#ctr.module,
+	Empty = new(Mod,0),
+	lists:foldr(fun(L,R) ->
+				io:format("L=~w~n", [L]),
+				io:format("R=~w~n", [R]),
+				merge(L,R) end, Empty, [H|T]).
 
 % Garbage-collect a counter, taking a large counter containing references
 % to remove and a small counter containing references to add.
@@ -91,8 +86,9 @@ counter_gc(Counter, ToRemove, ToAdd) ->
         create(NewDeltas, merge_fun(C)) % new counter with the ref removed
         end, Counter, sets:to_list(RefsToRemove)), % for all refs in "ToRemove"
 
-    Ret = counter_merge(ToAdd, Cleaned), % Add the new counter to "Cleaned"
-    Ret.
+	ok.
+    % Ret = counter_merge(ToAdd, Cleaned), % Add the new counter to "Cleaned"
+    % Ret.
 
 % Returns a counter without the recent increments
 counter_remove_recent(Counter, MaxItems) ->

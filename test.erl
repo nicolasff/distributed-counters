@@ -14,7 +14,7 @@ incr_counter(Cluster, CounterModule, I) ->
 
 get_summaries(Cluster) ->
     Counters = cluster:call(Cluster, get_raw),
-    lists:map(fun counter:counter_value/1, Counters).
+    lists:map(fun counter:value/1, Counters).
 
 run(NodeCount) ->
     random:seed(now()),
@@ -23,7 +23,7 @@ run(NodeCount) ->
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     Cluster = cluster:start(NodeCount, CounterModule),
-    Msgs = 10000,
+    Msgs = 5,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
@@ -34,9 +34,9 @@ run(NodeCount) ->
 
     io:format("Gettting full counters on all nodes...~n"),
     Counters = cluster:call(Cluster, get_raw),
-    Resolved = counter:counter_merge_all(Counters),
+    Resolved = counter:merge_all(Counters),
     io:format("Value of resolved counters: ~w~n",
-        [counter:counter_value(Resolved)]),
+        [counter:value(Resolved)]),
 
     io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)]),
 
