@@ -1,5 +1,5 @@
 -module(counter).
--record(ctr, {module, value}).
+-record(ctr, {module, data}).
 -export([new/2, merge/2, gc_info/1, gc_merge/2, value/1]).
 
 -export([behaviour_info/1]).
@@ -18,27 +18,27 @@ behaviour_info(_Other) ->
 
 new(Mod, Init) ->
     Value = Mod:new(Init),
-    #ctr{module=Mod, value=Value}.
+    #ctr{module=Mod, data=Value}.
 
 merge(L,R) ->
-    LV = L#ctr.value,
-    RV = R#ctr.value,
+    LV = L#ctr.data,
+    RV = R#ctr.data,
     Mod = L#ctr.module, % extract module from L
     Mod = R#ctr.module, % match module in R too
     Out = Mod:merge(LV, RV),
-    #ctr{module=Mod, value=Out}.
+    #ctr{module=Mod, data=Out}.
 
 gc_info(C) ->
     Mod = C#ctr.module,
-    Value = C#ctr.value,
+    Value = C#ctr.data,
     Mod:gc_info(Value).
 
 gc_merge(C, GcInfo) ->
     Mod = C#ctr.module,
-    Value = C#ctr.value,
-	#ctr{module=Mod, value=Mod:gc_merge(Value, GcInfo)}.
+    Value = C#ctr.data,
+	#ctr{module=Mod, data=Mod:gc_merge(Value, GcInfo)}.
 
 value(C) ->
     Mod = C#ctr.module,
-    Value = C#ctr.value,
+    Value = C#ctr.data,
     Mod:value(Value).

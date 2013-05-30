@@ -3,7 +3,6 @@
 -export([code_change/3, handle_call/3, handle_cast/2,
          handle_info/2, init/1, terminate/2]).
 -record(node, {data}).
--define(GC_COUNT_LIMIT, 10000).
 
 init([CounterModule]) ->
     Counter = counter:new(CounterModule, 0),
