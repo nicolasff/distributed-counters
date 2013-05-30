@@ -5,6 +5,17 @@
 -export([counter_value/1,counter_new/1,counter_merge/2,
         counter_merge_all/1,counter_gc/3,counter_remove_recent/2]).
 
+-export([behaviour_info/1]).
+
+behaviour_info(callbacks) ->
+    [{new,1},         % create a new counter from an initial value
+    {merge,2},        % merge two counters together and return a new one
+    {value,1},        % extract the value from a counter
+    {is_idempotent/0} % true/false - are updates to this counter idempotent?
+];
+behaviour_info(_Other) ->
+    undefined.
+
 create(Value, Fun) ->
     #counter {data=Value, merge=Fun}.
 
