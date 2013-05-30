@@ -9,7 +9,7 @@ Several functions can be implemented that way, including:
 
 * SUM (implemented in `ctr_sum.erl`)
 * MIN (implemented in `ctr_min.erl`)
-* MAX
+* MAX (implemented in `ctr_max.erl`)
 * AVG
 * STDDEV
 * Count-Min
@@ -43,7 +43,59 @@ Running the demo
 Run `make clean all demo` to run the demo.
 Here is what you should see:
 
-(TODO)
+    ==============================
+    Testing ctr_sum on 3 nodes
+    Sent 1000 messages
+    Sent 2000 messages
+    Sent 3000 messages
+    Sent 4000 messages
+    Sent 5000 messages
+    Sent 6000 messages
+    Sent 7000 messages
+    Sent 8000 messages
+    Sent 9000 messages
+    Sent 10000 messages
+    Expected value is 28408551
+    Gettting full counters on all nodes...
+    Value of resolved counters: 28408551
+    Counter according to each node: [29846104,26378597,26373581]
+    Trigger GC
+    Counter according to each node: [28408551,28408551,28408551]
+    
+    ==============================
+    Testing ctr_min on 3 nodes
+    Sent 1000 messages
+    Sent 2000 messages
+    Sent 3000 messages
+    Sent 4000 messages
+    Sent 5000 messages
+    Sent 6000 messages
+    Sent 7000 messages
+    Sent 8000 messages
+    Sent 9000 messages
+    Sent 10000 messages
+    Expected value is -999902
+    Gettting full counters on all nodes...
+    Value of resolved counters: -999902
+    Counter according to each node: [-999902,-999902,-999902]
+    
+    ==============================
+    Testing ctr_max on 3 nodes
+    Sent 1000 messages
+    Sent 2000 messages
+    Sent 3000 messages
+    Sent 4000 messages
+    Sent 5000 messages
+    Sent 6000 messages
+    Sent 7000 messages
+    Sent 8000 messages
+    Sent 9000 messages
+    Sent 10000 messages
+    Expected value is 999768
+    Gettting full counters on all nodes...
+    Value of resolved counters: 999768
+    Counter according to each node: [999768,999768,999768]
+    
 
 Limitations
 -----------
