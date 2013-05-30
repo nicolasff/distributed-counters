@@ -5,7 +5,7 @@ OBJS=$(EBIN)/cluster.beam $(EBIN)/counter.beam $(EBIN)/node.beam \
 
 all: $(OBJS)
 
-test: $(OBJS)
+demo: $(OBJS)
 	erl -pa $(EBIN) -noshell -run test main
 
 $(EBIN)/%.beam: %.erl
