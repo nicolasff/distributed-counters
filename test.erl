@@ -4,45 +4,48 @@
 main() ->
     run(3).
 
-incr_counter(C, I) ->
+incr_counter(Cluster, CounterModule, I) ->
     if  I rem 1000 == 0 -> io:format("Sent ~w messages~n", [I]);
         true -> ok
     end,
-    Counter = counter:counter_new(I), % create new counter with value "+I"
-    cluster:weak_call(C, {incr, Counter}). % send to all with probabt. of loss
+    Counter = counter:new(CounterModule, I), % create new counter
+	% io:format("Step ~w, Counter=~w~n", [I, Counter]),
+    cluster:weak_call(Cluster, {incr, Counter}). % send to all with probabt. of loss
 
-get_summaries(C) ->
-    Counters = cluster:call(C, get_raw),
+get_summaries(Cluster) ->
+    Counters = cluster:call(Cluster, get_raw),
     lists:map(fun counter:counter_value/1, Counters).
 
 run(NodeCount) ->
     random:seed(now()),
 
+	CounterModule = ctr_sum,
+
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
-    C = cluster:start(NodeCount),
+    Cluster = cluster:start(NodeCount, CounterModule),
     Msgs = 10000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
-    lists:map(fun(I) -> incr_counter(C, I) end, Deltas),
+    lists:map(fun(I) -> incr_counter(Cluster, CounterModule, I) end, Deltas),
 
     % collect answers
     io:format("Expected value is ~w~n", [lists:sum(Deltas)]),
 
     io:format("Gettting full counters on all nodes...~n"),
-    Counters = cluster:call(C, get_raw),
+    Counters = cluster:call(Cluster, get_raw),
     Resolved = counter:counter_merge_all(Counters),
     io:format("Value of resolved counters: ~w~n",
         [counter:counter_value(Resolved)]),
 
-    io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
+    io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)]),
 
     timer:sleep(1100), % wait a bit so that GC can pick up all increments
     io:format("Trigger GC~n"),
     gc:run(),
     timer:sleep(1000), % wait for GC to return
     
-    io:format("Sum according to each node: ~w~n", [get_summaries(C)]),
+    io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)]),
 
     init:stop(0).
 

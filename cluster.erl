@@ -1,5 +1,5 @@
 -module(cluster).
--export([start/1, weak_call/2, call/2]).
+-export([start/2, weak_call/2, call/2]).
 -record(cluster, {pids}).
 -define(MSGDROP_CHANCE,   1).
 -define(MSGDROP_TOTAL,  100).
@@ -7,9 +7,9 @@
 -define(MSGDUP_TOTAL,   100).
 
 % Create a cluster of N nodes, each running a gen_server
-start(N) ->
+start(N, CounterModule) ->
     Pids = lists:map(fun(_) ->
-                element(2, gen_server:start_link(node, [], []))
+                element(2, gen_server:start_link(node, [CounterModule], []))
         end, lists:seq(1,N)),
     Cluster = #cluster{pids=Pids},
     gc:start(Cluster),

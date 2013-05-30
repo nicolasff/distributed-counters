@@ -5,8 +5,8 @@
 -record(node, {data}).
 -define(GC_COUNT_LIMIT, 10000).
 
-init(_Args) ->
-    Counter = counter:counter_new(0),
+init([CounterModule]) ->
+    Counter = counter:new(CounterModule, 0),
     State = #node{data=Counter},
     {ok, State}.
 
@@ -18,9 +18,8 @@ handle_call(get_raw_for_gc, _From, State) ->
 % handle increment command
 handle_call({incr, Delta}, _From, State) ->
     Counter = State#node.data, % extract counter
-    Merge = counter:merge_fun(Counter), % select merge fun
-    NewValue = Merge(Counter,Delta), % merge with delta
-    gc:maybe_run(), % trigger GC with a given probability
+    NewValue = counter:merge(Counter, Delta), % merge with delta
+    % gc:maybe_run(), % trigger GC with a given probability
     NewState = State#node{data=NewValue},
     {reply, ok, NewState};
 
