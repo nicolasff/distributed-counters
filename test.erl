@@ -1,9 +1,14 @@
 -module(test).
 -export([main/0, test_simple_merge/0]).
+-define(CTR_MIN, -1000000).
+-define(CTR_MAX,  1000000).
 
 main() ->
     NodeCount = 3,
-    run(ctr_sum, NodeCount).
+    run(ctr_sum, NodeCount),
+    run(ctr_min, NodeCount),
+
+    init:stop(0).
 
 incr_counter(Cluster, CounterModule, I) ->
     if  I rem 1000 == 0 -> io:format("Sent ~w messages~n", [I]);
@@ -16,6 +21,17 @@ get_summaries(Cluster) ->
     Counters = cluster:call(Cluster, get_raw),
     lists:map(fun counter:value/1, Counters).
 
+local_reduce(CounterModule, Deltas) ->
+    counter:value(merge_all(CounterModule, lists:map(
+            fun(Delta) -> counter:new(CounterModule, Delta)
+            end, Deltas))).
+
+random_integers(N) ->
+    lists:map(fun(_) ->
+            ?CTR_MIN + random:uniform(?CTR_MAX - ?CTR_MIN) end,
+        lists:seq(1, N)).
+
+
 % Generate the merged version of several counters
 merge_all(CounterModule, [H|T]) ->
     Empty = counter:bottom(CounterModule),
@@ -25,20 +41,21 @@ run(CounterModule, NodeCount) ->
     random:seed(now()),
 
     % start cluster
+    io:format("~n==============================~n"),
     io:format("Testing ~w on ~w nodes~n", [CounterModule, NodeCount]),
     Cluster = cluster:start(NodeCount, CounterModule),
 
     % send "Cluster" record to all nodes.
     cluster:call(Cluster, {set_cluster, Cluster}),
 
-    Msgs = 10000,
+    MsgCount = 1000,
 
     % send deltas
-    Deltas = lists:seq(1,Msgs), % TODO: randomise
+    Deltas = random_integers(MsgCount),
     lists:map(fun(I) -> incr_counter(Cluster, CounterModule, I) end, Deltas),
 
     % collect answers
-    io:format("Expected value is ~w~n", [lists:sum(Deltas)]),
+    io:format("Expected value is ~w~n", [local_reduce(CounterModule, Deltas)]),
 
     io:format("Gettting full counters on all nodes...~n"),
     Counters = cluster:call(Cluster, get_raw),
@@ -46,7 +63,7 @@ run(CounterModule, NodeCount) ->
     io:format("Value of resolved counters: ~w~n",
         [counter:value(Resolved)]),
 
-    io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)]),
+    io:format("Counter according to each node: ~w~n", [get_summaries(Cluster)]),
 
     case CounterModule:is_idempotent() of
         true -> skip;
@@ -55,10 +72,10 @@ run(CounterModule, NodeCount) ->
             io:format("Trigger GC~n"),
             cluster:gc_run(Cluster),
             timer:sleep(1000), % wait for GC to return
-            io:format("Sum according to each node: ~w~n", [get_summaries(Cluster)])
+            io:format("Counter according to each node: ~w~n", [get_summaries(Cluster)])
     end,
 
-    init:stop(0).
+    done.
 
 test_simple_merge() ->
     A = counter:new(ctr_sum, 12),
