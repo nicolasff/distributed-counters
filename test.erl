@@ -17,7 +17,7 @@ get_summaries(Cluster) ->
 
 % Generate the merged version of several counters
 merge_all(CounterModule, [H|T]) ->
-    Empty = counter:new(CounterModule,0),
+    Empty = counter:bottom(CounterModule),
     lists:foldr(fun counter:merge/2, Empty, [H|T]).
 
 run(NodeCount) ->

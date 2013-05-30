@@ -1,6 +1,6 @@
 -module(ctr_sum).
 -behaviour(counter).
--export([is_idempotent/0, merge/2, new/1,
+-export([bottom/0, is_idempotent/0, merge/2, new/1,
          value/1, gc_info/1, gc_merge/2]).
 
 -define(MAX_GC_ITEMS, 10000).        % max # of increments to merge
@@ -20,6 +20,7 @@ dedupe(Increments) ->
 merge(L,R) ->
     dedupe(lists:keymerge(1, L, R)). % merge increments
 
+bottom() -> new(0).
 new(Value) -> % single increment w/ ID & time
     [{make_ref(), {now(), Value}}].
 

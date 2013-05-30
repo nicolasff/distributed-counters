@@ -5,7 +5,7 @@
 -record(node, {data}).
 
 init([CounterModule]) ->
-    Counter = counter:new(CounterModule, 0),
+    Counter = counter:bottom(CounterModule),
     State = #node{data=Counter},
     {ok, State}.
 
