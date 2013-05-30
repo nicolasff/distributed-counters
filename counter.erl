@@ -1,6 +1,6 @@
 -module(counter).
 -record(ctr, {module, data}).
--export([bottom/1, new/2, merge/2, gc_info/1, gc_merge/2, value/1]).
+-export([bottom/1, new/2, merge/2, gc_info/1, gc_merge/3, value/1]).
 
 -export([behaviour_info/1]).
 
@@ -11,7 +11,7 @@ behaviour_info(callbacks) ->
     {value,1},         % extract the value from a counter
     {is_idempotent,0}, % true/false - are updates to this counter idempotent?
     {gc_info,1},       % extract data from a counter as required for GC
-    {gc_merge,2}       % take a list of GC info and a counter, return a counter
+    {gc_merge,3}       % take a list of GC info and a counter, return a counter
 ];
 behaviour_info(_Other) ->
     undefined.
@@ -37,10 +37,10 @@ gc_info(C) ->
     Value = C#ctr.data,
     Mod:gc_info(Value).
 
-gc_merge(C, GcInfo) ->
+gc_merge(C, GcInfo, UniqId) ->
     Mod = C#ctr.module,
     Value = C#ctr.data,
-    wrap(Mod, Mod:gc_merge(Value, GcInfo)).
+    wrap(Mod, Mod:gc_merge(Value, GcInfo, UniqId)).
 
 value(C) ->
     Mod = C#ctr.module,

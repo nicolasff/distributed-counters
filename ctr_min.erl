@@ -1,7 +1,7 @@
 -module(ctr_min).
 -behaviour(counter).
 -export([bottom/0, is_idempotent/0, merge/2, new/1,
-         value/1, gc_info/1, gc_merge/2]).
+         value/1, gc_info/1, gc_merge/3]).
 
 is_idempotent() -> true.
 
@@ -14,4 +14,4 @@ new(Value) -> Value.
 value(C) -> C.
 
 gc_info(_C) -> error.
-gc_merge(_C, _GC) -> error.
+gc_merge(_C, _GC, _UniqId) -> error.

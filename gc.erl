@@ -28,7 +28,8 @@ gc_loop(Cluster) ->
 
 gc_run(Cluster, Ref) ->
     GcInfo = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
-    cluster:call(Cluster, {perform_gc, GcInfo}), % replace deltas
+    UniqId = make_ref(), % FIXME: it's not great to define it here.
+    cluster:call(Cluster, {perform_gc, GcInfo, UniqId}), % replace deltas
     ?GC_PROCESS_NAME ! Ref. % signal back
 
 gc_wait(Ref) ->

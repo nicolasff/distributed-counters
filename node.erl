@@ -28,9 +28,9 @@ handle_call(get_raw, _From, State) ->
 
 % handle perform_gc command. We'll get a data structure
 % that the counter knows how to extract data from.
-handle_call({perform_gc, GcInfo}, _From, State) ->
+handle_call({perform_gc, GcInfo, UniqId}, _From, State) ->
     Counter = State#node.data, % extract counter
-    NewValue = counter:gc_merge(Counter, GcInfo), % replace
+    NewValue = counter:gc_merge(Counter, GcInfo, UniqId), % replace
     NewState = State#node{data=NewValue},
     {reply, ok, NewState}.
 

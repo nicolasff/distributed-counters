@@ -1,7 +1,7 @@
 -module(ctr_sum).
 -behaviour(counter).
 -export([bottom/0, is_idempotent/0, merge/2, new/1,
-         value/1, gc_info/1, gc_merge/2]).
+         value/1, gc_info/1, gc_merge/3]).
 
 -define(MAX_GC_ITEMS, 10000).        % max # of increments to merge
 -define(GC_TIME_THRESHOLD, 1000000). % 1 sec
@@ -22,7 +22,10 @@ merge(L,R) ->
 
 bottom() -> new(0).
 new(Value) -> % single increment w/ ID & time
-    [{make_ref(), {now(), Value}}].
+	new(Value, make_ref()).
+
+new(Value, UniqId) -> % single increment w/ ID & time
+    [{UniqId, {now(), Value}}].
 
 value(C) -> % sum up all deltas
     Deduped = dedupe(C),
@@ -37,9 +40,9 @@ gc_info(C) -> % extract all "non-recent" increments
         end, Increments),
     OldIncrements.
 
-gc_merge(C, GcData) ->
+gc_merge(C, GcData, UniqId) ->
     AllIncrements = lists:concat(GcData),
-    ToAdd = new(value(AllIncrements)),
+    ToAdd = new(value(AllIncrements), UniqId),
     RefsToRemove = sets:from_list([Ref || {Ref,_} <- AllIncrements]),
     Cleaned = lists:foldr(fun(Ref, Cur) -> 
             lists:keydelete(Ref, 1, Cur) % Remove "Ref" from C
