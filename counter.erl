@@ -8,10 +8,12 @@
 -export([behaviour_info/1]).
 
 behaviour_info(callbacks) ->
-    [{new,1},         % create a new counter from an initial value
-    {merge,2},        % merge two counters together and return a new one
-    {value,1},        % extract the value from a counter
-    {is_idempotent,0} % true/false - are updates to this counter idempotent?
+    [{new,1},          % create a new counter from an initial value
+    {merge,2},         % merge two counters together and return a new one
+    {value,1},         % extract the value from a counter
+    {is_idempotent,0}, % true/false - are updates to this counter idempotent?
+	{gc_info,1},       % extract data from a counter as required for GC
+	{gc_merge,2}       % take a list of GC info and a counter, return a counter
 ];
 behaviour_info(_Other) ->
     undefined.
