@@ -14,8 +14,8 @@ behaviour_info(callbacks) ->
     {merge,2},         % merge two counters together and return a new one
     {value,1},         % extract the value from a counter
     {is_idempotent,0}, % true/false - are updates to this counter idempotent?
-	{gc_info,1},       % extract data from a counter as required for GC
-	{gc_merge,2}       % take a list of GC info and a counter, return a counter
+    {gc_info,1},       % extract data from a counter as required for GC
+    {gc_merge,2}       % take a list of GC info and a counter, return a counter
 ];
 behaviour_info(_Other) ->
     undefined.
@@ -25,31 +25,31 @@ create(Value, Fun) ->
 
 
 new(Mod, Init) ->
-	Value = Mod:new(Init),
-	#ctr{module=Mod, value=Value}.
+    Value = Mod:new(Init),
+    #ctr{module=Mod, value=Value}.
 
 merge(L,R) ->
-	LV = L#ctr.value,
-	RV = R#ctr.value,
-	Mod = L#ctr.module, % extract module from L
-	Mod = R#ctr.module, % match module in R too
-	Out = Mod:merge(LV, RV),
-	#ctr{module=Mod, value=Out}.
+    LV = L#ctr.value,
+    RV = R#ctr.value,
+    Mod = L#ctr.module, % extract module from L
+    Mod = R#ctr.module, % match module in R too
+    Out = Mod:merge(LV, RV),
+    #ctr{module=Mod, value=Out}.
 
 gc_info(C) ->
-	Mod = C#ctr.module,
-	Value = C#ctr.value,
-	Mod:gc_info(Value).
+    Mod = C#ctr.module,
+    Value = C#ctr.value,
+    Mod:gc_info(Value).
 
 gc_merge(GcInfo, C) ->
-	Mod = C#ctr.module,
-	Value = C#ctr.value,
-	Mod:gc_merge(GcInfo, Value).
+    Mod = C#ctr.module,
+    Value = C#ctr.value,
+    Mod:gc_merge(GcInfo, Value).
 
 value(C) ->
-	Mod = C#ctr.module,
-	Value = C#ctr.value,
-	Mod:value(Value).
+    Mod = C#ctr.module,
+    Value = C#ctr.value,
+    Mod:value(Value).
 
 % internal access
 merge_fun(C) -> C#counter.merge.
@@ -69,12 +69,12 @@ counter_value(C) ->
 
 % Generate the merged version of several counters
 merge_all([H|T]) ->
-	Mod = H#ctr.module,
-	Empty = new(Mod,0),
-	lists:foldr(fun(L,R) ->
-				io:format("L=~w~n", [L]),
-				io:format("R=~w~n", [R]),
-				merge(L,R) end, Empty, [H|T]).
+    Mod = H#ctr.module,
+    Empty = new(Mod,0),
+    lists:foldr(fun(L,R) ->
+                io:format("L=~w~n", [L]),
+                io:format("R=~w~n", [R]),
+                merge(L,R) end, Empty, [H|T]).
 
 % Garbage-collect a counter, taking a large counter containing references
 % to remove and a small counter containing references to add.
@@ -86,7 +86,7 @@ counter_gc(Counter, ToRemove, ToAdd) ->
         create(NewDeltas, merge_fun(C)) % new counter with the ref removed
         end, Counter, sets:to_list(RefsToRemove)), % for all refs in "ToRemove"
 
-	ok.
+    ok.
     % Ret = counter_merge(ToAdd, Cleaned), % Add the new counter to "Cleaned"
     % Ret.
 
