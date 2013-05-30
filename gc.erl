@@ -27,10 +27,8 @@ gc_loop(Cluster) ->
     gc_loop(Cluster).
 
 gc_run(Cluster, Ref) ->
-    Counters = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
-    Merged = counter:counter_merge_all(Counters), % merge into one, keep refs.
-    Equivalent = counter:counter_new(counter:counter_value(Merged)),
-    cluster:call(Cluster, {replace, Merged, Equivalent}), % replace deltas
+    GcInfo = cluster:call(Cluster, get_raw_for_gc),   % take all known deltas
+    cluster:call(Cluster, {perform_gc, GcInfo}), % replace deltas
     ?GC_PROCESS_NAME ! Ref. % signal back
 
 gc_wait(Ref) ->

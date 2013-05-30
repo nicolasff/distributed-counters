@@ -13,4 +13,4 @@ new(Value) -> Value.
 value(C) -> C.
 
 gc_info(_C) -> error.
-gc_merge(_GC, _C) -> error.
+gc_merge(_C, _GC) -> error.

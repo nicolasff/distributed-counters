@@ -1,5 +1,5 @@
 -module(test).
--export([main/0, x/0]).
+-export([main/0, test_simple_merge/0]).
 
 main() ->
     run(3).
@@ -9,12 +9,16 @@ incr_counter(Cluster, CounterModule, I) ->
         true -> ok
     end,
     Counter = counter:new(CounterModule, I), % create new counter
-    % io:format("Step ~w, Counter=~w~n", [I, Counter]),
     cluster:weak_call(Cluster, {incr, Counter}). % send to all with probabt. of loss
 
 get_summaries(Cluster) ->
     Counters = cluster:call(Cluster, get_raw),
     lists:map(fun counter:value/1, Counters).
+
+% Generate the merged version of several counters
+merge_all(CounterModule, [H|T]) ->
+    Empty = counter:new(CounterModule,0),
+    lists:foldr(fun counter:merge/2, Empty, [H|T]).
 
 run(NodeCount) ->
     random:seed(now()),
@@ -23,7 +27,7 @@ run(NodeCount) ->
 
     io:format("hello, world!, NodeCount=~w~n", [NodeCount]),
     Cluster = cluster:start(NodeCount, CounterModule),
-    Msgs = 5,
+    Msgs = 1000,
 
     % send deltas
     Deltas = lists:seq(1,Msgs),
@@ -34,7 +38,7 @@ run(NodeCount) ->
 
     io:format("Gettting full counters on all nodes...~n"),
     Counters = cluster:call(Cluster, get_raw),
-    Resolved = counter:merge_all(Counters),
+    Resolved = merge_all(CounterModule, Counters),
     io:format("Value of resolved counters: ~w~n",
         [counter:value(Resolved)]),
 
@@ -52,7 +56,7 @@ run(NodeCount) ->
 
     init:stop(0).
 
-x() ->
+test_simple_merge() ->
     A = counter:new(ctr_sum, 12),
     B = counter:new(ctr_sum, 34),
     C = counter:merge(A,B),
@@ -67,9 +71,9 @@ x() ->
     GcInfo = lists:map(fun counter:gc_info/1, [A,B]),
     io:format("GcInfo=~w~n", [GcInfo]),
 
-    A1 = counter:gc_merge(GcInfo, A),
-    B1 = counter:gc_merge(GcInfo, B),
-    C1 = counter:gc_merge(GcInfo, C),
+    A1 = counter:gc_merge(A, GcInfo),
+    B1 = counter:gc_merge(B, GcInfo),
+    C1 = counter:gc_merge(C, GcInfo),
 
     io:format("A1=~w~n", [A1]),
     io:format("B1=~w~n", [B1]),

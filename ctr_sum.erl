@@ -6,6 +6,11 @@
 -define(MAX_GC_ITEMS, 10000).        % max # of increments to merge
 -define(GC_TIME_THRESHOLD, 1000000). % 1 sec
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%          Simple counters with replay capability          %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A counter has a list of increments.
+% Each increment is a tuple {ref, delta}
 
 is_idempotent() -> false.
 
@@ -31,7 +36,7 @@ gc_info(C) -> % extract all "non-recent" increments
         end, Increments),
     OldIncrements.
 
-gc_merge(GcData, C) -> 
+gc_merge(C, GcData) ->
     AllIncrements = lists:concat(GcData),
     ToAdd = new(value(AllIncrements)),
     RefsToRemove = sets:from_list([Ref || {Ref,_} <- AllIncrements]),

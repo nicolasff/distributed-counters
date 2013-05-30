@@ -12,14 +12,14 @@ init([CounterModule]) ->
 
 handle_call(get_raw_for_gc, _From, State) ->
     Counter = State#node.data, % extract counter
-    Reply = counter:counter_remove_recent(Counter, ?GC_COUNT_LIMIT),
+    Reply = counter:gc_info(Counter),
     {reply, Reply, State};
 
 % handle increment command
 handle_call({incr, Delta}, _From, State) ->
     Counter = State#node.data, % extract counter
     NewValue = counter:merge(Counter, Delta), % merge with delta
-    % gc:maybe_run(), % trigger GC with a given probability
+    gc:maybe_run(), % trigger GC with a given probability
     NewState = State#node{data=NewValue},
     {reply, ok, NewState};
 
@@ -27,12 +27,11 @@ handle_call(get_raw, _From, State) ->
     Counter = State#node.data, % extract counter
     {reply, Counter, State};
 
-% handle replace command (used in GC).
-% ToRemove is a Counter, we'll remove all known refs
-% ToAdd is a Counter, we'll add it no matter what.
-handle_call({replace, ToRemove, ToAdd}, _From, State) ->
+% handle perform_gc command. We'll get a data structure
+% that the counter knows how to extract data from.
+handle_call({perform_gc, GcInfo}, _From, State) ->
     Counter = State#node.data, % extract counter
-    NewValue = counter:counter_gc(Counter, ToRemove, ToAdd), % replace
+    NewValue = counter:gc_merge(Counter, GcInfo), % replace
     NewState = State#node{data=NewValue},
     {reply, ok, NewState}.
 
