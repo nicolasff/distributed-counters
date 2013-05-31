@@ -13,5 +13,5 @@ new(Value) -> Value.
 
 value(C) -> C.
 
-gc_info(_C) -> error.
-gc_merge(_C, _GC, _UniqId) -> error.
+gc_info(C) -> C. % return the whole counter
+gc_merge(C, GC, _UniqId) -> lists:foldr(fun merge/2, C, GC).

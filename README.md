@@ -29,7 +29,7 @@ An Erlang “behaviour” is used to implement a few functions per counter, name
 * `gc_info/1` return a data structure used in GC.
 * `gc_merge/3` gives the GC data structure to an existing counter with a unique identifier and ask the counter to clean up old (and presumably irrelevant) data.
 
-Idempotent counter types do not need to implement `gc_info/1` and `gc_merge/3`.
+Idempotent counter types have trivial implementations for `gc_info/1` and `gc_merge/3`.
 
 Distribution
 ------------
