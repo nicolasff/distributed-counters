@@ -11,16 +11,12 @@
 
 is_idempotent() -> false.
 
-merge(L,R) -> ctr_refs:merge(L,R).
-
-bottom() -> ctr_refs:new(0).
-
+bottom()   -> new(0).
 new(Value) -> ctr_refs:new(Value).
+merge(L,R) -> ctr_refs:merge(L,R).
 
 value(C) -> ctr_refs:value(C, fun lists:sum/1). % sum up all deltas
 
 gc_info(C) -> ctr_refs:gc_info(C).
-
-gc_merge(C, GcData, UniqId) ->
-	ctr_refs:gc_merge(ctr_sum, C, GcData, UniqId).
+gc_merge(C, GcData, UniqId) -> ctr_refs:gc_merge(?MODULE, C, GcData, UniqId).
 
