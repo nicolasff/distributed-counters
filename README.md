@@ -10,7 +10,7 @@ Several functions can be implemented that way, including:
 * SUM (implemented in `ctr_sum.erl`)
 * MIN (implemented in `ctr_min.erl`)
 * MAX (implemented in `ctr_max.erl`)
-* AVG
+* AVG (implemented in `ctr_avg.erl`)
 * STDDEV
 * Count-Min
 * (Hyper)LogLog
@@ -55,12 +55,13 @@ Here is what you should see:
     Sent 8000 messages
     Sent 9000 messages
     Sent 10000 messages
-    Expected value is 28408551
+    Expected value is -110836610
     Gettting full counters on all nodes...
-    Value of resolved counters: 28408551
-    Counter according to each node: [29846104,26378597,26373581]
+    Value of resolved counters: -110836610
+    Counter according to each node: [-109582605,-110537717,-112440005]
+    Waiting a second before running GC...
     Trigger GC
-    Counter according to each node: [28408551,28408551,28408551]
+    Counter according to each node: [-110836610,-110836610,-110836610]
     
     ==============================
     Testing ctr_min on 3 nodes
@@ -74,10 +75,13 @@ Here is what you should see:
     Sent 8000 messages
     Sent 9000 messages
     Sent 10000 messages
-    Expected value is -999902
+    Expected value is -999999
     Gettting full counters on all nodes...
-    Value of resolved counters: -999902
-    Counter according to each node: [-999902,-999902,-999902]
+    Value of resolved counters: -999999
+    Counter according to each node: [-999999,-999999,-999999]
+    Waiting a second before running GC...
+    Trigger GC
+    Counter according to each node: [-999999,-999999,-999999]
     
     ==============================
     Testing ctr_max on 3 nodes
@@ -91,16 +95,40 @@ Here is what you should see:
     Sent 8000 messages
     Sent 9000 messages
     Sent 10000 messages
-    Expected value is 999768
+    Expected value is 999650
     Gettting full counters on all nodes...
-    Value of resolved counters: 999768
-    Counter according to each node: [999768,999768,999768]
+    Value of resolved counters: 999650
+    Counter according to each node: [999650,999650,999650]
+    Waiting a second before running GC...
+    Trigger GC
+    Counter according to each node: [999650,999650,999650]
     
+    ==============================
+    Testing ctr_avg on 3 nodes
+    Sent 1000 messages
+    Sent 2000 messages
+    Sent 3000 messages
+    Sent 4000 messages
+    Sent 5000 messages
+    Sent 6000 messages
+    Sent 7000 messages
+    Sent 8000 messages
+    Sent 9000 messages
+    Sent 10000 messages
+    Expected value is {-99168540,10000}
+    Gettting full counters on all nodes...
+    Value of resolved counters: {-99168540,10000}
+    Counter according to each node: [{-100403932,9985},{-97717578,9991},{-101242460,9984}]
+    Waiting a second before running GC...
+    Trigger GC
+    Counter according to each node: [{-99168540,10000},{-99168540,10000},{-99168540,10000}]
+
 
 Limitations
 -----------
 
 This code is quite inefficient and only intended as an experiment.
+The `GcInfo` object should use a more compact representation; Merkle Trees would probably help.
 
 License
 -------

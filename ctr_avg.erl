@@ -5,13 +5,16 @@
 
 is_idempotent() -> false.
 
-bottom()   -> new({0,1}).
-new(Value) -> ctr_refs:new(Value).
+bottom()   -> ctr_refs:new({0, 0}).
+new(Value) -> ctr_refs:new({Value, 1}).
 merge(L,R) -> ctr_refs:merge(L,R).
 
 value(C) -> ctr_refs:value(C, fun avg/1). % average all deltas
 avg(L) ->
-	lists:foldr(fun({LS,LC},{RS,RC}) -> {LS+RS,LC+RC} end, {0,0}, L).
+	lists:foldr(
+		fun({LSum,LCount},{RSum,RCount}) ->
+				{LSum+RSum,LCount+RCount}
+		end, {0,0}, L).
 
 gc_info(C) -> ctr_refs:gc_info(C).
 gc_merge(C, GcData, UniqId) -> ctr_refs:gc_merge(?MODULE, C, GcData, UniqId).

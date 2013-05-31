@@ -9,6 +9,7 @@ main() ->
     run(ctr_sum, MsgCount, NodeCount),
     run(ctr_min, MsgCount, NodeCount),
     run(ctr_max, MsgCount, NodeCount),
+    run(ctr_avg, MsgCount, NodeCount),
 
     init:stop(0).
 
@@ -66,16 +67,12 @@ run(CounterModule, MsgCount, NodeCount) ->
         [counter:value(Resolved)]),
 
     io:format("Counter according to each node: ~w~n", [get_summaries(Cluster)]),
-
-    case CounterModule:is_idempotent() of
-        true -> skip;
-        false -> 
-            timer:sleep(1100), % wait a bit so that GC can pick up all increments
-            io:format("Trigger GC~n"),
-            cluster:gc_run(Cluster),
-            timer:sleep(1000), % wait for GC to return
-            io:format("Counter according to each node: ~w~n", [get_summaries(Cluster)])
-    end,
+	io:format("Waiting a second before running GC...~n"),
+    timer:sleep(1100), % wait a bit so that GC can pick up all increments
+    io:format("Trigger GC~n"),
+    cluster:gc_run(Cluster),
+    timer:sleep(1000), % wait for GC to return
+    io:format("Counter according to each node: ~w~n", [get_summaries(Cluster)]),
 
     done.
 
