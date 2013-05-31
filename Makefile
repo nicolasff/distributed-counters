@@ -1,6 +1,6 @@
 EBIN=ebin
 OBJS=$(EBIN)/cluster.beam $(EBIN)/counter.beam $(EBIN)/node.beam \
-	$(EBIN)/test.beam $(EBIN)/gc.beam \
+	$(EBIN)/test.beam $(EBIN)/gc.beam $(EBIN)/ctr_refs.beam \
 	$(EBIN)/ctr_min.beam $(EBIN)/ctr_max.beam $(EBIN)/ctr_sum.beam 
 
 all: $(OBJS)
