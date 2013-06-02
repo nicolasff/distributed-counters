@@ -15,7 +15,7 @@ bottom()   -> new(0).
 new(Value) -> ctr_refs:new(Value).
 merge(L,R) -> ctr_refs:merge(L,R).
 
-value(C) -> ctr_refs:value(C, fun lists:sum/1). % sum up all deltas
+value(C) -> ctr_refs:value(C, fun(L,R) -> L+R end, 0). % sum up all deltas
 
 gc_info(C) -> ctr_refs:gc_info(C).
 gc_merge(C, GcData, UniqId) -> ctr_refs:gc_merge(?MODULE, C, GcData, UniqId).

@@ -1,5 +1,5 @@
 -module(ctr_refs).
--export([new/1, merge/2, value/2, gc_info/1, gc_merge/4]).
+-export([new/1, merge/2, value/3, gc_info/1, gc_merge/4]).
 
 -define(MAX_GC_ITEMS, 10000).        % max # of increments to merge
 -define(GC_TIME_THRESHOLD, 1000000). % 1 sec
@@ -17,9 +17,12 @@ merge(L,R) ->
 	% keep left value in case of key conflict (this is arbitrary)
 	orddict:merge(fun keep_left/3, L, R).
 
-value(C, Fun) ->
-	% TODO: use orddict:fold instead, requires changing type of Fun
-    Fun([Delta || {_Id,{_Timestamp,Delta}} <- orddict:to_list(C)]).
+value(C, Fun, Orig) ->
+	{_T, V} = orddict:fold(fun(_Key, {TL,L}, {_TR,R}) ->
+			Merged = Fun(L,R),
+			{TL,Merged} % return a tmestamp+value pair
+		end, {0,Orig}, C),
+	V.
 
 gc_info(C) -> % extract all "non-recent" increments
 	L = orddict:to_list(C),
