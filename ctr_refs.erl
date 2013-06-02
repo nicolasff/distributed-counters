@@ -18,7 +18,7 @@ merge(L,R) ->
 	orddict:merge(fun keep_left/3, L, R).
 
 value(C, Fun) ->
-	% TODO: use orddict:fold instead
+	% TODO: use orddict:fold instead, requires changing type of Fun
     Fun([Delta || {_Id,{_Timestamp,Delta}} <- orddict:to_list(C)]).
 
 gc_info(C) -> % extract all "non-recent" increments
@@ -46,10 +46,8 @@ gc_merge(CounterModule, C, GcData, UniqId) ->
             orddict:erase(Ref, Cur) % Remove "Ref" from C
         end, C, RefsToRemove), % for all refs in "ToRemove"
 
-	io:format("Cleaned=~w~n", [Cleaned]),
-
-    % AllIncrements = lists:concat(GcData),
+	% create new equivalent counter
     ToAdd = new(CounterModule:value(AllIncrements), UniqId),
 
-    Ret = merge(ToAdd, Cleaned), % Add the new counter to "Cleaned"
-    Ret.
+	% Add the new counter to "Cleaned"
+    merge(ToAdd, Cleaned).
