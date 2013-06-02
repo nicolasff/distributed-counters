@@ -1,7 +1,7 @@
 -module(cluster).
 -export([start/2, weak_call/2, call/2, gc_pid/1, gc_maybe_run/1, gc_run/1]).
 -record(cluster, {nodes, gc_pid}).
--define(GC_CHANCE,      0.001).
+-define(GC_CHANCE,      0.1).
 -define(MSGDROP_CHANCE, 0.01).
 -define(MSGDUP_CHANCE,  0.01).
 
